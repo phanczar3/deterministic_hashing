@@ -1,12 +1,13 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -O2
-TARGET = a
-SRC = a.cpp
+SRCS = a.cpp b.cpp
+TARGETS = $(basename $(SRCS))
 
-all: $(TARGET)
+$(TARGETS): %: %.cpp
+	$(CXX) $(CXXFLAGS) -o $@ $<
 
-$(TARGET): $(SRC)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SRC)
+check-%:
+	python3 check.py ./$* test_data/
 
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGETS)
