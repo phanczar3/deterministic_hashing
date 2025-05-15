@@ -1,6 +1,7 @@
 #include <functional>
 #include <iostream>
 #include <vector>
+#include <random>
 
 using namespace std;
 using ll = long long;
@@ -8,6 +9,7 @@ using ll = long long;
 pair<function<ll(ll)>, function<ll(ll)>>
 displace(vector<ll> keys, function<ll(ll)> f, function<ll(ll)> g, int r) {
 	int n = keys.size();
+    mt19937 rng(1);
 
 	vector<pair<ll, ll>> v(n);
     vector<int> cnt(1 << r);
@@ -40,18 +42,62 @@ displace(vector<ll> keys, function<ll(ll)> f, function<ll(ll)> g, int r) {
             p[p_idx++] = val;
         }
     }
-    
-    vector<int> m(1 << r, 0);
+
+    vector<int> m(1 << r, 0), a(1 << r, 0);
+    uniform_int_distribution<int> get_random(0, (1 << r) - 1);
+    int cnt_prev = 0;
     for(int i = 0; i < (1 << r); i++) {
-        if(cnt[p[i]] == 0) break;
+        int cur_val = p[i];
+        int cnt_val = (cur_val + 1 == 1 << r ? n : cnt[cur_val + 1]) - cnt[cur_val];
+        ll max_collisions = (1LL * cnt_val * cnt_prev) >> (r - 1), new_collisions;
 
+        do {
+            a[cur_val] = get_random(rng);
+            new_collisions = 0;
+            for(int j = cnt[cur_val]; j < cnt[cur_val] + cnt_val; j++) {
+                new_collisions += m[v[j].second ^ a[cur_val]];
+            }
+        } while(new_collisions > max_collisions);
         
-
+        for(int j = cnt[cur_val]; j < cnt[cur_val] + cnt_val; j++) {
+            m[v[j].second ^ a[cur_val]]++;
+        }
+        
+        cnt_prev += cnt_val;
     }
 
+    function<ll(ll)> h = [a, f, g](ll x) -> ll {
+        return g(x) ^ a[f(x)];
+    };
 
-    
-
+    return {h, f};
 }
 
-int main() { return 0; }
+int main() { 
+    int n;
+    cin >> n;
+
+    vector<ll> keys(n);
+    int logn = 31 - __builtin_clz(n), w = 0;
+    for(int i = 0; i < n; i++) {
+        cin >> keys[i];
+        w = max(w, 64 - __builtin_clzll(keys[i]));
+    }
+
+    int r = max(w / 2, logn + 4);
+    function<ll(ll)> f = [r, w](ll x) -> ll {
+        return x >> max(0, w - r);
+    };
+    function<ll(ll)> g = [r](ll x) -> ll {
+        return x & ((1 << r) - 1);
+    };
+
+    auto [f2, g2] = displace(keys, f, g, r);
+    auto [f3, g3] = displace(keys, f2, g2, r);
+
+    for(int i = 0; i < n; i++) {
+        cout << keys[i] << " " << f3(keys[i]) << "\n";
+    }
+
+    return 0; 
+}
