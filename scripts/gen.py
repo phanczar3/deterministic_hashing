@@ -5,9 +5,9 @@ TYPE = 3
 
 if TYPE == 1:
     x = int(input())
-    RANGE_MIN, RANGE_MAX, NUM_VALUES = 0, 10 ** 10, 10 ** 5
+    RANGE_MIN, RANGE_MAX, NUM_VALUES = 0, 2 * 10 ** 3, 1024
     nums = random.sample(range(RANGE_MIN, RANGE_MAX + 1), NUM_VALUES)
-    OUTPUT_FILE = f'test_data/input_rand{x}.in'
+    OUTPUT_FILE = f'test_data/input_small{x}.in'
 elif TYPE == 2:
     x = int(input())
     length = 18 - x
@@ -30,21 +30,21 @@ elif TYPE == 2:
 elif TYPE == 3:
     x = int(input())
     NUM_VALUES = 10 ** 5
-    length, no_blocks = 21, 300
+    no_blocks = 300
     st = set()
     for i in range(no_blocks):
-        val = random.randint(0, 2 ** 21 - 1)
+        val = random.randint(0, 2 ** 11 - 1)
         for j in range(10 ** 5 // no_blocks):
-            val2 = random.randint(0, 2 ** 13 - 1)
-            st.add(val * 2 ** 13 + val2)
+            val2 = random.randint(0, 2 ** 11 - 1)
+            st.add(val * 2 ** 11 + val2)
     
     while len(st) < NUM_VALUES:
-        st.add(random.randint(0, 10 ** 10 + 1))
+        st.add(random.randint(0, 2 ** 22 - 1))
 
     nums = list(st)
     OUTPUT_FILE = f'test_data/input_pref{x}.in'
 
-with open(OUTPUT_FILE, "w") as f:
+with open(OUTPUT_FILE, "x") as f:
     f.write(f"{NUM_VALUES}\n")
     for num in nums:
         f.write(f"{num}\n")

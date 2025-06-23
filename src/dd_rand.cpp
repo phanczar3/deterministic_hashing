@@ -5,11 +5,11 @@
 
 using namespace std;
 using ll = long long;
+mt19937 rng(random_device{}());
 
 pair<function<ll(ll)>, function<ll(ll)>>
 displace(vector<ll> keys, function<ll(ll)> f, function<ll(ll)> g, int r) {
-	int n = keys.size();
-    mt19937 rng(random_device{}());
+	int n = keys.size();    
 
 	vector<pair<ll, ll>> v(n);
     vector<int> cnt(1 << r);
@@ -28,13 +28,11 @@ displace(vector<ll> keys, function<ll(ll)> f, function<ll(ll)> g, int r) {
         cnt[i] += cnt[i - 1];
     }
 
-    // TODO in place
     vector<pair<ll,ll>> v2(n);
     for(int i = 0; i < n; i++) {
         v2[--cnt[v[i].first]] = v[i];
     }
     v = move(v2);
-    // ENDTODO
 
     vector<int> p(1 << r);
     for(int i = n, p_idx = 0; i >= 0; i--) {
@@ -93,11 +91,11 @@ int main() {
         return x & ((1 << r) - 1);
     };
 
-    auto [f2, g2] = displace(keys, f, g, r);
-    auto [f3, g3] = displace(keys, f2, g2, r);
+    auto p2 = displace(keys, f, g, r);
+    auto p3 = displace(keys, p2.first, p2.second, r);
 
     for(int i = 0; i < n; i++) {
-        cout << keys[i] << " " << f3(keys[i]) << "\n";
+        cout << keys[i] << " " << p3.first(keys[i]) << "\n";
     }
 
     return 0; 

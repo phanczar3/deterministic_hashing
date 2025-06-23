@@ -1,13 +1,25 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -O2
-SRCS = a.cpp b.cpp
+DEBUG = 0
+ifeq ($(DEBUG), 1)
+    CXXFLAGS = -std=c++11 -Wall -Wextra -fsanitize=address -g -O0 -DDEBUG
+else
+    CXXFLAGS = -std=c++11 -Wall -Wextra -O2
+endif
+
+
+SRC_DIR = src
+SRCS = $(wildcard $(SRC_DIR)/*.cpp)
 TARGETS = $(basename $(SRCS))
+TARGETS_NAMES = $(notdir $(TARGETS))
 
-$(TARGETS): %: %.cpp
-	$(CXX) $(CXXFLAGS) -o $@ $<
+default:
+	@echo "Use make check-<target>"
 
-check-%:
-	python3 check.py ./$* test_data/
+$(TARGETS_NAMES): %: $(SRC_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) -o $(SRC_DIR)/$@ $<
+
+check-%: %
+	python3 scripts/check.py $(SRC_DIR)/$* tests/
 
 clean:
 	rm -f $(TARGETS)
