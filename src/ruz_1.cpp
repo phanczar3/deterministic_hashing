@@ -6,8 +6,6 @@ using ll = long long;
 
 struct mst {
     int k, v, cnt0, cnt1;
-
-    mst(int _k = 0, int _v = 0, int _cnt0 = 0, int _cnt1 = 0) : k(_k), v(_v), cnt0(_cnt0), cnt1(_cnt1) {}
 };
 
 template<typename F> 
