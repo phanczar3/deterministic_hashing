@@ -38,8 +38,8 @@ int get_val(vector<int> &t, vector<pair<int,int>> &v, int st, int en) {
     return cur - base;
 }
 
-pair<function<ll(ll)>, function<ll(ll)>>
-displace(vector<ll> keys, function<ll(ll)> f, function<ll(ll)> g, int r) {
+pair<function<int(ll)>, function<int(ll)>>
+displace(vector<ll> keys, function<int(ll)> f, function<int(ll)> g, int r) {
 	int n = keys.size();
 
 	vector<pair<int, int>> v(n);
@@ -93,38 +93,84 @@ displace(vector<ll> keys, function<ll(ll)> f, function<ll(ll)> g, int r) {
         cnt_prev += cnt_val;
     }
 
-    function<ll(ll)> h = [a, f, g](ll x) -> ll {
+    function<int(ll)> h = [a, f, g](ll x) -> ll {
         return g(x) ^ a[f(x)];
     };
 
     return {h, f};
 }
 
+function<int(ll)> dd_derand(vector<ll> keys) {
+    int n = keys.size(), ln = 31 - __builtin_clz(n), w = 0;
+
+    for(int i = 0; i < n; i++) {
+        w = max(w, 64 - __builtin_clzll(keys[i]));
+    }
+
+    int max_len = 2 * ln + 8;
+    int delta = ln + 4;
+    int times = 1 + max(0, (w - 2 * ln - 8 + delta - 1) / delta);
+    int cur_w = w;
+
+    vector<function<int(ll)>> seq(times);
+    for(int i = 0; i < times; i++) {
+        vector<ll> cur_keys = keys;
+        if(i < times - 1) {
+            for(int j = 0; j < n; j++) {
+                cur_keys[j] >>= cur_w - max_len;
+            }
+        }
+
+        function<int(ll)> f = [ln](ll x) -> ll {
+            return x >> (ln + 4);
+        };
+        function<int(ll)> g = [ln](ll x) -> ll {
+            return x & ((1 << (ln + 4)) - 1);
+        };
+
+        auto p2 = displace(cur_keys, f, g, ln + 4);
+        auto p3 = displace(cur_keys, p2.first, p2.second, ln + 4);
+        seq[i] = p3.first;
+        for(int j = 0; j < n && i < times - 1; j++) {
+            keys[j] &= (1LL << (cur_w - max_len)) - 1;
+            ll hash = (ll)seq[i](cur_keys[j]) << (cur_w - max_len);
+            assert((hash & keys[j]) == 0);
+            keys[j] |= hash;
+        }
+        cur_w -= delta;
+    }
+
+    function<int(ll)> h = [seq, times, delta, w, max_len](ll x) -> int {
+        int cur_w = w;
+        for(int i = 0; i < times - 1; i++) {
+            ll y = x;
+            y >>= (cur_w - max_len);
+            ll hash = (ll)seq[i](y) << (cur_w - max_len);
+            x &= (1LL << (cur_w - max_len)) - 1;
+            assert((hash & x) == 0);
+            x |= hash;
+            cur_w -= delta;
+        }
+        return seq[times - 1](x);
+    };
+    
+    return h;
+}
+
 int main() { 
     int n;
     cin >> n;
 
-    
     vector<ll> keys(n);
-    int logn = 31 - __builtin_clz(n), w = 0;
+    
     for(int i = 0; i < n; i++) {
         cin >> keys[i];
-        w = max(w, 64 - __builtin_clzll(keys[i]));
     }
 
-    int r = max(w / 2, logn + 4);
-    function<ll(ll)> f = [r, w](ll x) -> ll {
-        return x >> max(0, w - r);
-    };
-    function<ll(ll)> g = [r](ll x) -> ll {
-        return x & ((1 << r) - 1);
-    };
-
-    auto p2 = displace(keys, f, g, r);
-    auto p3 = displace(keys, p2.first, p2.second, r);
+    function<int(ll)> f = dd_derand(keys);
 
     for(int i = 0; i < n; i++) {
-        cout << keys[i] << " " << p3.first(keys[i]) << "\n";
+        cout << keys[i] << " " << f(keys[i]) << "\n";
     }
 
     return 0; 
