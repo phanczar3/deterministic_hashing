@@ -18,8 +18,12 @@ default:
 $(TARGETS_NAMES): %: $(SRC_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -o $(SRC_DIR)/$@ $<
 
-check-%: %
-	python3 scripts/check.py $(SRC_DIR)/$* tests/
+check-correctness-%: %
+	python3 scripts/check.py $(SRC_DIR)/$* tests/correctness
+
+check-performance-%: %
+	python3 scripts/check.py $(SRC_DIR)/$* tests/performance
+
 
 clean:
 	rm -f $(TARGETS)

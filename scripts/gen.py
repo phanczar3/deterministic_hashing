@@ -1,13 +1,13 @@
 import random
 
 
-TYPE = 3
+TYPE = 1
 
 if TYPE == 1:
     x = int(input())
-    RANGE_MIN, RANGE_MAX, NUM_VALUES = 0, 2 * 10 ** 3, 1024
+    RANGE_MIN, RANGE_MAX, NUM_VALUES = 0, 2 ** 11, 2 ** 10
     nums = random.sample(range(RANGE_MIN, RANGE_MAX + 1), NUM_VALUES)
-    OUTPUT_FILE = f'test_data/input_small{x}.in'
+    OUTPUT_FILE = f'tests/correctness/{x}.in'
 elif TYPE == 2:
     x = int(input())
     length = 18 - x
@@ -26,7 +26,7 @@ elif TYPE == 2:
     while len(st) < NUM_VALUES:
         st.add(random.randint(RANGE_MIN2, RANGE_MAX2 + 1))
     nums = list(st)
-    OUTPUT_FILE = f'test_data/input_ps{x}.in'
+    OUTPUT_FILE = f'tests/input_ps{x}.in'
 elif TYPE == 3:
     x = int(input())
     NUM_VALUES = 10 ** 5
@@ -42,7 +42,7 @@ elif TYPE == 3:
         st.add(random.randint(0, 2 ** 22 - 1))
 
     nums = list(st)
-    OUTPUT_FILE = f'test_data/input_pref{x}.in'
+    OUTPUT_FILE = f'tests/input_pref{x}.in'
 
 with open(OUTPUT_FILE, "x") as f:
     f.write(f"{NUM_VALUES}\n")

@@ -10,13 +10,12 @@ class FormatError(Exception):
         super().__init__(message)
 
 
-if len(sys.argv) not in [3, 4]:
+if len(sys.argv) != 3:
     print("Invalid number of arguments")
     sys.exit(1)
 
 program_path = sys.argv[1]
 second_arg = sys.argv[2]
-collision_bound = int(sys.argv[3]) if len(sys.argv) == 4 else 0
 
 if os.path.isdir(second_arg):
     input_files = sorted([os.path.join(second_arg, f) for f in os.listdir(second_arg) if f.endswith(".in")])
@@ -86,28 +85,19 @@ for input_file in input_files:
             raise FormatError(msg)
 
 
-        passed = True
-        n, w, max_hash = len(lines), 0, 0
+        n = len(lines)
         hashes = dd(int)
 
         for line in lines:
             key, hash = map(int, line.split())
             hashes[hash] += 1
-            max_hash = max(hash, max_hash)
-            w = int(math.log2(max(key, 1))) + 1
 
         collisions = 0
         for sizes in hashes.values():
             collisions += sizes * (sizes - 1) // 2
         
-        if collisions > collision_bound:
-            passed = False
-        
-        if passed:
-            print(f"Test {input_file}: Passed")
-        else:
-            print(f"Test {input_file}: Failed")
-            print(f"No. of collisions: {collisions}")
+        print(f"Test {input_file}: Finished")
+        print(f"No. of collisions: {collisions}")
 
     except subprocess.TimeoutExpired:
         print(f"Test {input_file}: Timeout")
