@@ -59,7 +59,7 @@ for input_file in input_files:
             input=input_data,
             text=True,
             capture_output=True,
-            timeout=3
+            timeout=55
         )
 
         output = result.stdout

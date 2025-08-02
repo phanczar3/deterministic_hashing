@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <chrono>
 
 using namespace std;
 using ll = long long;
@@ -236,7 +237,15 @@ int main() {
         cin >> keys[i];
     }
 
+    // for benchmarks
+    // chrono::steady_clock::time_point t0 = chrono::steady_clock::now();
+
     auto f = ruz_1(keys);
+
+    // chrono::steady_clock::time_point t1 = chrono::steady_clock::now();
+    // chrono::duration<double> elapsed = chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
+
+    // cout << elapsed.count() << "\n";
 
     for(int i = 0; i < n; i++) {
         cout << keys[i] << " " << f(keys[i]) << "\n";

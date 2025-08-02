@@ -2,6 +2,7 @@
 #include <vector>
 #include <math.h>
 #include <map>
+#include <chrono>
 
 using namespace std;
 using ll = long long;
@@ -132,13 +133,17 @@ vector<vector<level>> merge_lists(vector<vector<level>> &list1, vector<vector<le
 
             if(left_lvl.k < right_lvl.k) {
                 list[cur_group].push_back(left_lvl);
+                left_idx++;
             } else if(left_lvl.k > right_lvl.k) {
                 list[cur_group].push_back(right_lvl);
+                right_idx++;
             } else {
                 if(left_lvl.v < right_lvl.v) {
                     list[cur_group].push_back(left_lvl);
+                    left_idx++;
                 } else if(left_lvl.v > right_lvl.v) {
                     list[cur_group].push_back(right_lvl);
+                    right_idx++;
                 } else {
                     assert(false);
                 }
@@ -209,7 +214,6 @@ const map<pair<int,int>,pair<int,vector<int>>> p_preprocessed = {
 
 
 function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
-    
     ll max_val = 0;
     for(int i = 0; i < (int)keys.size(); i++) {
         max_val = max(max_val, keys[i]);
@@ -218,7 +222,6 @@ function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
     assert(phi + psi >= w);
 
     int lphi = 31 - __builtin_clz(phi);
-
 
     vector<int> a(1 << phi, 0);
 
@@ -235,7 +238,7 @@ function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
     }
     istar = (*it).second.first, p = (*it).second.second;
 
-    for(int phase = 1; phase <= (1 == 1 ? 1 : 2 * istar + 2); phase++) {
+    for(int phase = 1; phase <= 2 * istar + 2; phase++) {
         int eta = (1 << (p[phase] - p[phase - 1] + lphi));
         int max_group = p[phase] - p[phase - 1];
 
@@ -249,7 +252,6 @@ function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
         vector<vector<level>> list(max_group + 1);
 
         for(int j = 0; j < phi; j++) {
-
             vector<vector<level>> leaf_list = make_leaf_list(labels, i_labels, j, max_group);
             vector<vector<level>> merged_list = merge_lists(list, leaf_list);
             list = move(merged_list);
@@ -356,7 +358,7 @@ function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
                 if(delta[i_tree] != 0) {
                     int cur_k = list[1][i_tree].k;
                     for(int i = cur_k << j; i < ((cur_k + 1) << j); i++) {
-                        a[i] ^= (delta[i_tree] << p[phase]);
+                        a[i] ^= (delta[i_tree] << p[phase - 1]);
                     }
                 }
             }
@@ -392,16 +394,23 @@ function<int(ll)> ruz_2(vector<ll> keys) {
     int cur_w = w;
 
 
+
     vector<function<int(ll)>> seq(times);
     for(int i = 0; i < times - 1; i++) {
         vector<ll> cur_keys = keys;
+        int w0 = 0;
+        for(ll x : cur_keys) {
+            w0 = max(w0, 64 - __builtin_clzll(x));
+        }
         for(int j = 0; j < n; j++) {
             cur_keys[j] >>= cur_w - max_len;
         }
         seq[i] = find_values(cur_keys, phi_preprocessed[lN - 10], lN);
         for(int j = 0; j < n; j++) {
             keys[j] &= (1LL << (cur_w - max_len)) - 1;
-            ll hash = (ll)seq[i](cur_keys[j]) << (cur_w - max_len);
+            ll hash = (ll)seq[i](cur_keys[j]);
+            assert(hash < (1LL << (psi)));
+            hash <<= (cur_w - max_len);
             assert((hash & keys[j]) == 0);
             keys[j] |= hash;
         }
@@ -436,7 +445,15 @@ int main() {
         cin >> keys[i];
     }
 
+    // for benchmarks
+    // chrono::steady_clock::time_point t0 = chrono::steady_clock::now();
+
     auto f = ruz_2(keys);
+
+    // chrono::steady_clock::time_point t1 = chrono::steady_clock::now();
+    // chrono::duration<double> elapsed = chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
+    
+    // cout << elapsed.count() << "\n";
 
     for(int i = 0; i < n; i++) {
         cout << keys[i] << " " << f(keys[i]) << "\n";
