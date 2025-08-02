@@ -1,3 +1,6 @@
 .clang-format
 .vscode
 counter.cpp
+calc.py
+graph.py
+gen.py

@@ -21,6 +21,9 @@ $(TARGETS_NAMES): %: $(SRC_DIR)/%.cpp
 check-correctness-%: %
 	python3 scripts/check.py $(SRC_DIR)/$* tests/correctness
 
+check-correctness_small-%: %
+	python3 scripts/check.py $(SRC_DIR)/$* tests/correctness_small
+
 check-performance-%: %
 	python3 scripts/check.py $(SRC_DIR)/$* tests/performance
 

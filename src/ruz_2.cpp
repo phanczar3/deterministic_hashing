@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
+#include <map>
 
 using namespace std;
 using ll = long long;
@@ -35,7 +36,7 @@ void counting_sort(vector<T> &v, F f, int psi) {
 
 vector<label> labels_of_leafs(vector<ll> keys, const function<int(ll)> &h, const vector<int> &p, int phase, int eta, int phi, int psi) {
     function<int(ll)> get_phi = [&](ll x) -> int { return x >> psi; };
-    function<int(ll)> get_v = [&](ll x) -> int { return h(x) >> p[phase - 1]; };
+    function<int(ll)> get_v = [&](ll x) -> int { return h(x) >> (psi - p[phase - 1]); };
     function<int(ll)> get_bits = [&](ll x) -> int { return (h(x) >> (psi - p[phase])) & ((1 << (p[phase] - p[phase - 1])) - 1); };
 
     
@@ -142,7 +143,16 @@ vector<vector<level>> merge_lists(vector<vector<level>> &list1, vector<vector<le
                     assert(false);
                 }
             }
+        }
 
+        while(left_idx < (int)list1[cur_group].size()) {
+            list[cur_group].push_back(list1[cur_group][left_idx]);
+            left_idx++;
+        }
+
+        while(right_idx < (int)list2[cur_group].size()) {
+            list[cur_group].push_back(list2[cur_group][right_idx]);
+            right_idx++;
         }
     }
 
@@ -175,17 +185,31 @@ pair<ll,ll> count_collisions(vector<level> &lvls, int left_start, int left_end, 
                 coll0 += (ll) lvls[left_start].w[i] * lvls[right_start].w[i] + (ll) lvls[left_start].w[i | 1] * lvls[right_start].w[i | 1];
                 coll1 += (ll) lvls[left_start].w[i] * lvls[right_start].w[i | 1] + (ll) lvls[left_start].w[i | 1] * lvls[right_start].w[i];
             }
+            left_start++, right_start++;
         }
     }
     return {coll0, coll1};
 }
 
+const vector<int> phi_preprocessed = {4, 5, 5, 6, 7, 8, 8, 9, 10, 11, 12};
+
+const map<pair<int,int>,pair<int,vector<int>>> p_preprocessed = {
+    {{4,10}, {1, {0, 3, 5, 7, 10}}},
+    {{5,11}, {1, {0, 3, 5, 7, 11}}},
+    {{5,12}, {1, {0, 4, 6, 8, 12}}},
+    {{6,13}, {1, {0, 4, 6, 8, 13}}},
+    {{7,14}, {1, {0, 5, 7, 9, 14}}},
+    {{8,15}, {1, {0, 4, 7, 10, 15}}},
+    {{8,16}, {1, {0, 5, 8, 11, 16}}},
+    {{9,17}, {1, {0, 5, 8, 11, 17}}},
+    {{10,18}, {1, {0, 6, 9, 12, 18}}},
+    {{11,19}, {2, {0, 6, 8, 11, 14, 17, 19}}},
+    {{12,20}, {2, {0, 7, 9, 12, 15, 18, 20}}}
+};
+
+
 function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
     
-    assert(phi >= 2);
-
-    phi++;
-
     ll max_val = 0;
     for(int i = 0; i < (int)keys.size(); i++) {
         max_val = max(max_val, keys[i]);
@@ -202,30 +226,16 @@ function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
         return (x & ((1LL << psi) - 1)) ^ a[x >> psi];
     };
 
-    int istar = floor(log2(psi) - log2(log2(phi)) - 1);
+    int istar;
+    vector<int> p;
 
-
-    vector<int> p(2 * istar + 3);
-    p[0] = 0;
-    for(int i = 1; i <= istar; i++) {
-        p[i] = floor(((double)(1LL << i) - 1) * psi / (1LL << i)) - i * lphi;
+    auto it = p_preprocessed.find({phi, psi});
+    if(it == p_preprocessed.end()) {
+        assert(false);
     }
-    for(int i = istar + 1; i <= 2 * istar + 2; i++) {
-        p[i] = p[i - 1] + lphi;
-    }
+    istar = (*it).second.first, p = (*it).second.second;
 
-    for(int i = 0; i < 2 * istar + 3; i++) {
-        cout << p[i] << " ";
-    }
-
-    // check that sequence is correct
-    for(int i = 0; i < 2 * istar + 2; i++) {
-        assert(p[i] < p[i + 1]);
-    }
-    // assert(p[2 * istar + 2] == psi);
-
-
-    for(int phase = 1; phase <= 2 * istar + 2; phase++) {
+    for(int phase = 1; phase <= (1 == 1 ? 1 : 2 * istar + 2); phase++) {
         int eta = (1 << (p[phase] - p[phase - 1] + lphi));
         int max_group = p[phase] - p[phase - 1];
 
@@ -239,11 +249,10 @@ function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
         vector<vector<level>> list(max_group + 1);
 
         for(int j = 0; j < phi; j++) {
-            vector<vector<level>> leaf_list = make_leaf_list(labels, i_labels, j, max_group);
 
+            vector<vector<level>> leaf_list = make_leaf_list(labels, i_labels, j, max_group);
             vector<vector<level>> merged_list = merge_lists(list, leaf_list);
             list = move(merged_list);
-
             
             int no_trees = list[1].size();
             for(int cur_group = 2; cur_group <= max_group; cur_group++) {
@@ -254,13 +263,12 @@ function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
             vector<vector<int>> perms(no_trees, vector<int>(1, 0));
 
             vector<vector<level>> new_list(max_group + 1);
-
             for(int cur_group = 1; cur_group <= max_group; cur_group++) {
                 vector<level> &cur_list = list[cur_group]; 
+
                 for(int lvl_start = 0; lvl_start < no_trees; ) {
                     int left_start = lvl_start, left_end = get_end(cur_list, left_start, (cur_list[lvl_start].k / 2) * 2);
                     int right_start = left_end, right_end = get_end(cur_list, right_start, (cur_list[lvl_start].k / 2) * 2 + 1);
-                    
                     
                     if(right_start == right_end) {
                         for(int idx_lvl = left_start; idx_lvl < left_end; idx_lvl++) {
@@ -287,10 +295,10 @@ function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
 
                         auto collisions = count_collisions(cur_list, left_start, left_end, right_start, right_end);
                         
-                        bool swapped = false;
+                        int b = 0;
+
                         if(collisions.first > collisions.second) {
-                            // set bit to 1
-                            swapped = true;
+                            b = 1;
                             delta[right_start] = delta[right_start] | (1 << (max_group - cur_group));
                             for(int i = 0; i < (int)perms[right_start].size(); i += 2) {
                                 swap(perms[right_start][i], perms[right_start][i + 1]);
@@ -305,7 +313,7 @@ function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
                         while(left_start < left_end && right_start < right_end) {
                             if(cur_list[left_start].v == cur_list[right_start].v) {
                                 for(int i = 0; i < (1 << cur_group); i += 2) { 
-                                    if(!swapped) {
+                                    if(b == 0) {
                                         cur_list[left_start].w[i] += cur_list[right_start].w[i];
                                         cur_list[left_start].w[i | 1] += cur_list[right_start].w[i | 1];
                                     } else {
@@ -313,41 +321,46 @@ function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
                                         cur_list[left_start].w[i | 1] += cur_list[right_start].w[i];
                                     }
                                 }
+                                cur_list[left_start].k /= 2;
                                 new_list[cur_group].push_back(cur_list[left_start]);
+                                left_start++, right_start++;
                             } else if(cur_list[left_start].v < cur_list[right_start].v) {
+                                cur_list[left_start].k /= 2;
                                 new_list[cur_group].push_back(cur_list[left_start]);
                                 left_start++;
                             } else {
+                                cur_list[right_start].k /= 2;
                                 new_list[cur_group].push_back(cur_list[right_start]);
                                 right_start++;
                             }
                         }
 
                         while(left_start < left_end) {
+                            cur_list[left_start].k /= 2;
                             new_list[cur_group].push_back(cur_list[left_start]);
                             left_start++;
                         }
 
                         while(right_start < right_end) {
+                            cur_list[right_start].k /= 2;
                             new_list[cur_group].push_back(cur_list[right_start]);
                             right_start++;
                         }
-
                     }
                     lvl_start = right_end;
+
                 }
             }
-
-            list = move(new_list);
 
             for(int i_tree = 0; i_tree < no_trees; i_tree++) {
                 if(delta[i_tree] != 0) {
-                    int cur_k = 2 * list[1][i_tree].k + 1;
+                    int cur_k = list[1][i_tree].k;
                     for(int i = cur_k << j; i < ((cur_k + 1) << j); i++) {
-                        a[i] ^= a[i] ^ (delta[i_tree] << p[phase]);
+                        a[i] ^= (delta[i_tree] << p[phase]);
                     }
                 }
             }
+            list = move(new_list);
         }
     }
 
@@ -359,6 +372,8 @@ function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
 }
 
 function<int(ll)> ruz_2(vector<ll> keys) {
+    assert((int)keys.size() >= 513 && (int)keys.size() <= 1048576);
+
     int n = keys.size();
     ll max_val = 0;
     
@@ -369,13 +384,13 @@ function<int(ll)> ruz_2(vector<ll> keys) {
     }
 
     int N =  1 << (31 - __builtin_clz(n - 1) + 1);
-    int lN = 31 - __builtin_clz(N), llN = 31 - __builtin_clz(lN - 1) + 1;
-    int max_len = 2 * lN - 2 * llN;
-    int delta = max_len - lN, w = 64 - __builtin_clzll(max_val);
-    // assert n big enough
-    assert(delta > 0);
+    int lN = 31 - __builtin_clz(N);
+    int psi = lN, phi = phi_preprocessed[lN - 10];
+    int max_len = psi + phi;
+    int delta = phi, w = 64 - __builtin_clzll(max_val);
     int times = 1 + max(0, (w - max_len + delta - 1) / delta);
     int cur_w = w;
+
 
     vector<function<int(ll)>> seq(times);
     for(int i = 0; i < times - 1; i++) {
@@ -383,7 +398,7 @@ function<int(ll)> ruz_2(vector<ll> keys) {
         for(int j = 0; j < n; j++) {
             cur_keys[j] >>= cur_w - max_len;
         }
-        seq[i] = find_values(cur_keys, lN - 2 * llN, lN);
+        seq[i] = find_values(cur_keys, phi_preprocessed[lN - 10], lN);
         for(int j = 0; j < n; j++) {
             keys[j] &= (1LL << (cur_w - max_len)) - 1;
             ll hash = (ll)seq[i](cur_keys[j]) << (cur_w - max_len);
@@ -392,7 +407,7 @@ function<int(ll)> ruz_2(vector<ll> keys) {
         }
         cur_w -= delta;
     }
-    seq[times - 1] = find_values(keys, lN - 2 * llN, lN);
+    seq[times - 1] = find_values(keys, phi_preprocessed[lN - 10], lN);
     
 
     function<int(ll)> h = [seq, times, delta, w, max_len](ll x) -> int {

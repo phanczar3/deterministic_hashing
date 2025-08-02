@@ -59,7 +59,7 @@ for input_file in input_files:
             input=input_data,
             text=True,
             capture_output=True,
-            timeout=2
+            timeout=3
         )
 
         output = result.stdout
@@ -97,6 +97,7 @@ for input_file in input_files:
             collisions += sizes * (sizes - 1) // 2
         
         print(f"Test {input_file}: Finished")
+        print(f"No. of keys: {n}")
         print(f"No. of collisions: {collisions}")
 
     except subprocess.TimeoutExpired:

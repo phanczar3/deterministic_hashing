@@ -8,8 +8,8 @@ struct mst {
     int k, v, cnt0, cnt1;
 };
 
-template<typename F> 
-void counting_sort(vector<ll> &v, F f, int psi) {
+template<typename T, typename F> 
+void counting_sort(vector<T> &v, F f, int psi) {
     vector<int> cnt(1 << psi, 0);
     for(int i = 0; i < (int)v.size(); i++) {
         cnt[f(v[i])]++;
@@ -19,12 +19,14 @@ void counting_sort(vector<ll> &v, F f, int psi) {
         cnt[i] += cnt[i - 1];
     }
 
-    vector<ll> v2(v.size());
+    vector<T> v2(v.size());
     for(int i = (int)v.size() - 1; i >= 0; i--) {
         v2[--cnt[f(v[i])]] = v[i];
     }
     v = move(v2);
 }
+
+const vector<int> phi_preprocessed = {4, 5, 5, 6, 7, 8, 8, 9, 10, 11, 12};
 
 function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
     
@@ -131,6 +133,7 @@ function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
                         int rv = ref2.v, rcnt0 = ref2.cnt0, rcnt1 = ref2.cnt1;
 
                         if(lv == rv) {
+                            list[left_ptr].k /= 2, list[right_ptr].k /= 2;
                             new_list.push_back({lk / 2, lv, 
                                 lcnt0 + (b == 0 ? rcnt0 : rcnt1), 
                                 lcnt1 + (b == 0 ? rcnt1 : rcnt0)});
@@ -146,7 +149,8 @@ function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
 
                     // update a_r accordingly
                     if(b == 1) {
-                        for(int i = list[right_start].k << j; i < ((list[right_start].k + 1) << j); i++) {
+                        int cur_k = list[right_start].k * 2 + 1;
+                        for(int i = cur_k << j; i < ((cur_k + 1) << j); i++) {
                             assert(i < (1 << phi));
                             a[i] ^= (1 << (psi - pos - 1));
                         }
@@ -169,6 +173,8 @@ function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
 }
 
 function<int(ll)> ruz_1(vector<ll> keys) {
+    assert((int)keys.size() >= 513 && (int)keys.size() <= 1048576);
+
     int n = keys.size();
     ll max_val = 0;
     
@@ -179,11 +185,10 @@ function<int(ll)> ruz_1(vector<ll> keys) {
     }
 
     int N =  1 << (31 - __builtin_clz(n - 1) + 1);
-    int lN = 31 - __builtin_clz(N), llN = 31 - __builtin_clz(lN - 1) + 1;
-    int max_len = 2 * lN - 2 * llN;
-    int delta = max_len - lN, w = 64 - __builtin_clzll(max_val);
-    // assert n big enough
-    assert(delta > 0);
+    int lN = 31 - __builtin_clz(N);
+    int psi = lN, phi = phi_preprocessed[lN - 10];
+    int max_len = psi + phi;
+    int delta = phi, w = 64 - __builtin_clzll(max_val);
     int times = 1 + max(0, (w - max_len + delta - 1) / delta);
     int cur_w = w;
 
@@ -193,7 +198,7 @@ function<int(ll)> ruz_1(vector<ll> keys) {
         for(int j = 0; j < n; j++) {
             cur_keys[j] >>= cur_w - max_len;
         }
-        seq[i] = find_values(cur_keys, lN - 2 * llN, lN);
+        seq[i] = find_values(cur_keys, phi_preprocessed[lN - 10], lN);
         for(int j = 0; j < n; j++) {
             keys[j] &= (1LL << (cur_w - max_len)) - 1;
             ll hash = (ll)seq[i](cur_keys[j]) << (cur_w - max_len);
@@ -202,7 +207,7 @@ function<int(ll)> ruz_1(vector<ll> keys) {
         }
         cur_w -= delta;
     }
-    seq[times - 1] = find_values(keys, lN - 2 * llN, lN);
+    seq[times - 1] = find_values(keys, phi_preprocessed[lN - 10], lN);
     
 
     function<int(ll)> h = [seq, times, delta, w, max_len](ll x) -> int {
