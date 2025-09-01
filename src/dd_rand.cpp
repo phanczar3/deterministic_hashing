@@ -3,6 +3,7 @@
 #include <vector>
 #include <random>
 #include <chrono>
+#include <assert.h>
 
 using namespace std;
 using ll = long long;
@@ -33,7 +34,7 @@ displace(vector<ll> keys, function<int(ll)> f, function<int(ll)> g, int r) {
     for(int i = 0; i < n; i++) {
         v2[--cnt[v[i].first]] = v[i];
     }
-    v = move(v2);
+    v = std::move(v2);
 
     vector<int> p(1 << r);
     for(int i = n, p_idx = 0; i >= 0; i--) {
@@ -149,9 +150,9 @@ int main() {
 
     // cout << elapsed.count() << "\n";
 
-    // for(int i = 0; i < n; i++) {
-    //     cout << keys[i] << " " << f(keys[i]) << "\n";
-    // }
+    for(int i = 0; i < n; i++) {
+        cout << keys[i] << " " << f(keys[i]) << "\n";
+    }
 
     return 0; 
 }

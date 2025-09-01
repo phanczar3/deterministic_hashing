@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#include <assert.h>
 
 using namespace std;
 using ll = long long;
@@ -24,7 +25,7 @@ void counting_sort(vector<T> &v, F f, int psi) {
     for(int i = (int)v.size() - 1; i >= 0; i--) {
         v2[--cnt[f(v[i])]] = v[i];
     }
-    v = move(v2);
+    v = std::move(v2);
 }
 
 const vector<int> phi_preprocessed = {4, 5, 5, 6, 7, 8, 8, 9, 10, 11, 12};
@@ -162,7 +163,7 @@ function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
                 left_start = left_end = right_start = right_end = right_end + 1;
             }
 
-            list = move(new_list);
+            list = std::move(new_list);
         }
     }
 

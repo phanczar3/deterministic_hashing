@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
+#include <assert.h>
 #include <map>
 #include <chrono>
 
@@ -32,7 +33,7 @@ void counting_sort(vector<T> &v, F f, int psi) {
     for(int i = (int)v.size() - 1; i >= 0; i--) {
         v2[--cnt[f(v[i])]] = v[i];
     }
-    v = move(v2);
+    v = std::move(v2);
 }
 
 vector<label> labels_of_leafs(vector<ll> keys, const function<int(ll)> &h, const vector<int> &p, int phase, int eta, int phi, int psi) {
@@ -177,7 +178,7 @@ void permute_vector(vector<int> &list, vector<int> &perm) {
     for(int i = 0; i < (int)list.size(); i++) {
         new_list[perm[i]] = list[i];
     }
-    list = move(new_list);
+    list = std::move(new_list);
 }  
 
 pair<ll,ll> count_collisions(vector<level> &lvls, int left_start, int left_end, int right_start, int right_end) {
@@ -254,7 +255,7 @@ function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
         for(int j = 0; j < phi; j++) {
             vector<vector<level>> leaf_list = make_leaf_list(labels, i_labels, j, max_group);
             vector<vector<level>> merged_list = merge_lists(list, leaf_list);
-            list = move(merged_list);
+            list = std::move(merged_list);
             
             int no_trees = list[1].size();
             for(int cur_group = 2; cur_group <= max_group; cur_group++) {
@@ -291,7 +292,7 @@ function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
                             else new_perm[i] = 2 * perms[right_start][i / 2] + 1;
                         }
 
-                        perms[right_start] = move(new_perm);
+                        perms[right_start] = std::move(new_perm);
                         for(int idx_lvl = left_start; idx_lvl < left_end; idx_lvl++) 
                             permute_vector(cur_list[idx_lvl].w, perms[right_start]);
 
@@ -362,7 +363,7 @@ function<int(ll)> find_values(vector<ll> keys, int phi, int psi) {
                     }
                 }
             }
-            list = move(new_list);
+            list = std::move(new_list);
         }
     }
 
